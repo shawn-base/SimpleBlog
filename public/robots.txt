@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /blog/
+Allow: /blog/*
+
+# 禁止爬虫访问管理后台和API
+Disallow: /admin/
+Disallow: /api/
+
+# 网站地图位置
+Sitemap: https://ds.dannyhkk.cn/sitemap.xml 

@@ -1,0 +1,54 @@
+server {
+    listen 80;
+    server_name yourdomain.com;
+    
+    # 将HTTP请求重定向到HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name yourdomain.com;
+    
+    # SSL证书配置
+    ssl_certificate /path/to/yourdomain.com.crt;
+    ssl_certificate_key /path/to/yourdomain.com.key;
+    
+    # 普通页面 - 无需客户端证书
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    # 静态资源缓存
+    location /_next/static/ {
+        proxy_pass http://localhost:3000;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+    
+    # Admin路径 - 需要客户端证书
+    location /admin {
+        # 启用客户端证书验证
+        ssl_client_certificate /path/to/ca.crt;
+        ssl_verify_client on;
+        
+        # 如果客户端验证通过，代理到Next.js服务器
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        
+        # 将证书信息传递给后端
+        proxy_set_header X-SSL-Client-Verify $ssl_client_verify;
+        proxy_set_header X-SSL-Client-DN $ssl_client_s_dn;
+    }
+} 
